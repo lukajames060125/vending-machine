@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drinks for Thirsty Love (NTD) - Vending Machine</title>
+    <style>
+        /* --- GLOBAL BODY STYLING --- */
+        body {
+            background-color: #f0f0f0; 
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        /* --- VENDING MACHINE CONTAINER (HOLDS THE MAIN MACHINE AND SIDE CHANGER) --- */
+        .vending-machine-container {
+            display: flex; 
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5)); 
+            border-radius: 8px; 
+            position: relative;
+        }
+
+        /* --- SIDE TEXT --- */
+        .side-note {
+            position: absolute;
+            top: 50px; 
+            left: -120px; 
+            width: 100px;
+            background-color: #f8d7da; 
+            color: #721c24; 
+            padding: 10px;
+            border: 2px solid #f5c6cb;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 0.9em;
+            font-weight: bold;
+            transform: rotate(-5deg); 
+            z-index: 2; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        /* * --- VENDING MACHINE STYLING (The "Real Machine" Look) --- */
+        .vending-machine {
+            width: 320px; 
+            border: 1px solid #222;
+            padding: 15px;
+            background-color: #333; 
+            background-image: linear-gradient(
+                45deg, 
+                rgba(255, 255, 255, 0.05) 25%, 
+                transparent 25%, 
+                transparent 75%, 
+                rgba(255, 255, 255, 0.05) 75%, 
+                rgba(255, 255, 255, 0.05)
+            );
+            background-size: 20px 20px; 
+            border-top-left-radius: 8px; 
+            border-bottom-left-radius: 8px;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            position: relative; 
+            z-index: 1; 
+        }
+        .vending-machine h2 {
+            text-align: center;
+            color: #ffc107; 
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #555;
+            font-size: 1.5em;
+        }
+        
+        /* Styling for the glass/product area */
+        .product-grid-container {
+            background-color: #1a1a1a; 
+            padding: 10px;
+            border: 2px solid #555;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.9);
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .display {
+            background-color: #000;
+            color: #0f0;
+            padding: 10px;
+            text-align: right;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            border-radius: 3px;
+            border: 1px solid #555;
+            display: flex;  
+            justify-content: space-between;
+            align-items: flex-end;  
+            flex-wrap: wrap;  
+        }
+        #display-screen {
+            flex-grow: 1;  
+            text-align: left;
+        }
+        #display-balance {
+            color: #00ff00;
+            font-size: 0.8em;
+            display: block;
+            margin-left: 10px;
+            flex-shrink: 0;  
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .product {
+            border: 2px solid #555;
+            padding: 10px 5px;
+            text-align: center;
+            background-color: #fff;  
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            border-radius: 3px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 0.9em;
+        }
+        /* Visual cue for selected product */
+        .product.selected {
+            box-shadow: 0 0 10px #ffc107;
+            border-color: #ffc107;
+        }
+
+        .product p {
+            margin: 2px 0;
+        }
+        .product:hover {
+            background-color: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        /* Controls Area */
+        .controls {
+            background-color: #444;  
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            border-top: 2px solid #555;
+            color: #fff;
+        }
+        .controls label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .controls input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: none;
+            border-radius: 3px;
+        }
+        .controls button {
+            width: 100%;
+            padding: 10px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 3px;
+            margin-top: 5px;
+        }
+        /* Styles for Purchase button */
+        #purchase-button {
+            background-color: #5cb85c;
+        }
+        #purchase-button:hover {
+            background-color: #449d44;
+        }
+        /* Styles for Return Change button */
+        #change-button {
+            background-color: #d9534f;
+        }
+        #change-button:hover {
+            background-color: #c9302c;
+        }
+        
+        /* NEW STYLES for Code Selection Buttons */
+        .code-selection {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 buttons per row */
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .code-selection button {
+            padding: 8px 0;
+            background-color: #666;
+            color: white;
+            border: 1px solid #777;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: background-color 0.1s;
+        }
+        .code-selection button:hover {
+            background-color: #777;
+        }
+        .code-selection button.selected-code {
+            background-color: #ffc107;
+            color: #333;
+            border-color: #ffc107;
+        }
+        
+        /* NEW STYLES for Money Selection Buttons */
+        .money-selection {
+            grid-template-columns: repeat(5, 1fr); /* Changed to 5 for NT$ 5 button */
+            margin-bottom: 10px;
+        }
+
+        /* Drop/Return Area */
+        #output-area {
+            margin-top: 15px;  
+            padding: 10px;
+            background-color: #555;  
+            border-radius: 0 0 8px 8px;
+            text-align: center;
+            color: #fff;
+            font-weight: bold;
+            border-top: 2px solid #333;
+            min-height: 80px;  
+        }
+        #output-area p {
+            margin: 0;
+        }
+
+        /* NEW STYLE FOR DROPPED ITEM */
+        .item-icon {
+            font-size: 40px;  
+            display: block;
+            line-height: 1;
+            margin-top: 5px;
+        }
+
+        /* --- COIN CHANGER/PAYMENT PANEL --- */
+        .coin-changer {
+            width: 100px;  
+            background-color: #4a4a4a;  
+            border: 1px solid #222;
+            border-left: none;  
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;  
+            align-items: center;
+            border-top-right-radius: 8px;  
+            border-bottom-right-radius: 8px;
+            position: relative;
+            z-index: 0;  
+            box-sizing: border-box;  
+
+            background-image: linear-gradient(
+                45deg,  
+                rgba(255, 255, 255, 0.03) 25%,  
+                transparent 25%,  
+                transparent 75%,  
+                rgba(255, 255, 255, 0.03) 75%,  
+                rgba(255, 255, 255, 0.03)
+            );
+            background-size: 15px 15px;
+        }
+        .coin-changer h3 {
+            color: #fff;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1em;
+            text-align: center;
+        }
+        .slot {
+            width: 80%;
+            height: 30px;
+            background-color: #222;
+            border: 1px solid #666;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #ccc;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.8);
+        }
+        .coin-slot {
+            height: 40px;  
+            margin-top: 10px;
+            margin-bottom: 30px;
+            background-color: #111;
+            border: 2px solid #555;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.9);
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+            overflow: hidden;  
+            position: relative;
+        }
+        .coin-slot::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+            width: 80%;
+            height: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+        .change-return-tray {
+            height: 50px;  
+            background-color: #222;
+            border-top: 2px solid #555;
+            border-bottom: 2px solid #555;
+            border-radius: 0 0 4px 4px;  
+            margin-top: auto;  
+            margin-bottom: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.9);
+            color: #ccc;
+            font-weight: bold;
+            font-size: 0.8em;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="vending-machine-container">
+    <div class="side-note">
+        Why not me? 
+    </div>
+    <div class="vending-machine">
+        <h2>Drinks for Thirsty Love</h2>
+
+        <div class="display" id="display-screen-wrapper">
+            <span id="display-screen">Welcome! Insert money.</span>
+            <span id="display-balance">Balance: NT$ 0</span>
+        </div>
+
+        <div class="product-grid-container">
+            <div class="product-grid">
+                <div class="product" data-code="A1" data-price="35" data-name="Soda" data-icon="🥤" data-stock="5">
+                    <p>Soda 🥤</p>
+                    <p>A1 - NT$ 35</p>
+                </div>
+                <div class="product" data-code="A2" data-price="50" data-name="Coffee" data-icon="☕" data-stock="5">
+                    <p>Coffee ☕</p>
+                    <p>A2 - NT$ 50</p>
+                </div>
+                
+                <div class="product" data-code="A3" data-price="60" data-name="Milk Tea" data-icon="🧋" data-stock="5">
+                    <p>Milk Tea 🧋</p>
+                    <p>A3 - NT$ 60</p>
+                </div>
+                
+                <div class="product" data-code="B1" data-price="20" data-name="Plain Water" data-icon="💧" data-stock="5">
+                    <p>Plain Water 💧</p>
+                    <p>B1 - NT$ 20</p>
+                </div>
+                
+                <div class="product" data-code="B2" data-price="45" data-name="Energy Drink" data-icon="⚡" data-stock="5">
+                    <p>Energy Drink ⚡</p>
+                    <p>B2 - NT$ 45</p>
+                </div>
+                
+                <div class="product" data-code="B3" data-price="30" data-name="Iced Lemon Tea" data-icon="🍋" data-stock="5">
+                    <p>Iced Lemon Tea 🍋</p>
+                    <p>B3 - NT$ 30</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <label>Select Code:</label>
+            <div class="code-selection" id="code-selection-buttons">
+                <button data-code="A1">A1</button>
+                <button data-code="A2">A2</button>
+                <button data-code="A3">A3</button>
+                <button data-code="B1">B1</button>
+                <button data-code="B2">B2</button>
+                <button data-code="B3">B3</button>
+            </div>
+            
+            <label>Insert Money (NT$):</label>
+            <div class="code-selection money-selection" id="money-selection-buttons">
+                <button data-value="5">5</button> <button data-value="10">10</button>
+                <button data-value="20">20</button>
+                <button data-value="50">50</button>
+                <button data-value="100">100</button>
+            </div>
+            <button id="purchase-button">Purchase</button>
+            <button id="change-button">Return Change</button>
+        </div>
+
+        <div id="output-area">
+            <p>Product Drop Area</p>
+        </div>
+    </div>
+
+    <div class="coin-changer">
+        <h3>Payment</h3>
+        <div class="slot coin-slot">Insert Bills/Coins</div>
+        <div class="slot change-return-tray">Change Return</div>
+    </div>
+</div>
+
+<script>
+    // --- Vending Machine JavaScript Logic ---
+
+    // Initial state variables
+    let currentBalance = 0;
+    let selectedCode = '';
+    
+    // Coin Inventory (UPDATED to include NT$ 5 and increased stock for better change-making)
+    let coinInventory = {
+        5: 15,    // Fifteen NT$ 5 coins
+        10: 20,   // Twenty NTD coins
+        20: 10,   // Ten NTD coins
+        50: 8,    // Eight NTD coins
+        100: 4    // Four NTD bills/coins
+    };
+    
+    // NT$ 5 added to accepted denominations
+    const ACCEPTED_DENOMINATIONS = [5, 10, 20, 50, 100]; 
+
+    // Get DOM elements
+    const displayScreen = document.getElementById('display-screen');
+    const displayBalance = document.getElementById('display-balance');
+    const purchaseButton = document.getElementById('purchase-button');
+    const changeButton = document.getElementById('change-button');
+    const outputArea = document.getElementById('output-area');
+    const productElements = document.querySelectorAll('.product');
+    const changeReturnTray = document.querySelector('.change-return-tray');  
+    const codeButtons = document.querySelectorAll('#code-selection-buttons button'); 
+    
+    // Get the money buttons
+    const moneyButtons = document.querySelectorAll('#money-selection-buttons button'); 
+
+    // Available products (Mirroring the HTML data attributes)
+    const products = Array.from(productElements).reduce((acc, el) => {
+        acc[el.dataset.code] = {
+            name: el.dataset.name,
+            price: parseFloat(el.dataset.price),
+            icon: el.dataset.icon,
+            stock: parseInt(el.dataset.stock) // Initial stock from HTML
+        };
+        return acc;
+    }, {});
+
+
+    // --- Helper Functions ---
+
+    function updateDisplay(message) {
+        displayScreen.textContent = message;
+        displayBalance.textContent = `Balance: NT$ ${currentBalance.toFixed(0)}`;
+    }
+
+    function resetSelection() {
+        selectedCode = '';
+        productElements.forEach(p => p.classList.remove('selected'));
+        codeButtons.forEach(b => b.classList.remove('selected-code'));
+    }
+    
+    // Function to check if change can be made using current inventory
+    function canMakeChange(amount) {
+        let tempAmount = amount;
+        const denominations = Object.keys(coinInventory).map(Number).sort((a, b) => b - a);  
+
+        for (const denom of denominations) {
+            if (tempAmount === 0) break;
+            
+            let countNeeded = Math.floor(tempAmount / denom);  
+            let countAvailable = coinInventory[denom];  
+            let countToUse = Math.min(countNeeded, countAvailable);
+            
+            tempAmount -= countToUse * denom;
+        }
+
+        return tempAmount === 0;
+    }
+
+
+    // Function to dispense change and reset the balance (The Core Changer Logic)
+    function returnChange() {
+        let changeDue = currentBalance;
+        let changeReturned = {};  
+        const denominations = Object.keys(coinInventory).map(Number).sort((a, b) => b - a);  
+        let successfulDispense = true;
+        let message = '';
+
+        if (changeDue === 0) {
+            updateDisplay("No change due. Thank you!");
+            setTimeout(() => {
+                outputArea.innerHTML = `<p>Product Drop Area</p>`;
+                changeReturnTray.innerHTML = `Change Return`;  
+                updateDisplay("Welcome! Select an item or insert money.");
+            }, 3000);  
+            return;
+        }
+        
+        let tempChangeDue = changeDue;
+        
+        // 1. Calculate change (Greedy algorithm)
+        for (const denom of denominations) {
+            if (tempChangeDue === 0) break;
+            
+            let countNeeded = Math.floor(tempChangeDue / denom);  
+            let countAvailable = coinInventory[denom];  
+            let countToUse = Math.min(countNeeded, countAvailable);
+            
+            if (countToUse > 0) {
+                changeReturned[denom] = countToUse;
+                tempChangeDue -= countToUse * denom;
+            }
+        }
+        
+        // 2. Check if dispensing was successful
+        if (tempChangeDue > 0) {
+            successfulDispense = false;
+            // Balance is NOT reset if change cannot be made
+            message = `ERROR: Cannot make exact change of NT$ ${changeDue.toFixed(0)}. Please contact support. Balance kept.`;
+        } else {
+            // Dispense successful: Update inventory, reset balance, generate message
+            for (const denom in changeReturned) {
+                coinInventory[denom] -= changeReturned[denom];
+            }
+            
+            let changeBreakdown = Object.entries(changeReturned).map(([denom, count]) => `NT$ ${denom} x ${count}`).join(', ');
+            message = `Dispensing Change: NT$ ${changeDue.toFixed(0)}. Breakdown: ${changeBreakdown}`;
+            changeReturnTray.innerHTML = changeBreakdown.replace(/, /g, '<br>');
+            currentBalance = 0; // Reset balance after successful dispense
+        }
+        
+        updateDisplay(message);  
+
+        // Reset output area and change tray after a moment
+        setTimeout(() => {
+            outputArea.innerHTML = `<p>Product Drop Area</p>`;
+            if(successfulDispense) changeReturnTray.innerHTML = `Change Return`;  
+            updateDisplay(successfulDispense ? "Thank you! Select an item or insert money." : "Error: Balance retained.");
+        }, 3000);  
+
+        resetSelection();
+    }
+
+
+    // --- Event Handlers ---
+
+    // 1. Handle clicking on a code button (Selects the code)
+    codeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const code = button.dataset.code;
+            
+            // Clear previous selections
+            codeButtons.forEach(b => b.classList.remove('selected-code'));
+            productElements.forEach(p => p.classList.remove('selected'));
+
+            // Set new selection
+            button.classList.add('selected-code');
+            selectedCode = code;
+
+            const item = products[code];
+            // Highlight the corresponding product box (visual aid)
+            const productEl = document.querySelector(`.product[data-code="${code}"]`);
+            if (productEl) productEl.classList.add('selected');
+
+            if (item.stock === 0) {
+                updateDisplay(`${item.name} (${code}) is SOLD OUT!`);
+                resetSelection();
+            } else {
+                updateDisplay(`Selected: ${item.name}. Price: NT$ ${item.price.toFixed(0)}`);
+            }
+        });
+    });
+
+    // 2. Handle clicking on a product (also selects the code)
+    productElements.forEach(product => {
+        product.addEventListener('click', () => {
+            const code = product.dataset.code;
+
+            // Clear previous selections
+            productElements.forEach(p => p.classList.remove('selected'));
+            codeButtons.forEach(b => b.classList.remove('selected-code'));
+
+            product.classList.add('selected');
+            selectedCode = code;
+
+            // Highlight the corresponding code button (visual aid)
+            const codeButton = document.querySelector(`.code-selection button[data-code="${code}"]`);
+            if (codeButton) codeButton.classList.add('selected-code');
+
+            const item = products[code];
+            if (item.stock === 0) {
+                updateDisplay(`${item.name} (${code}) is SOLD OUT!`);
+                resetSelection();
+            } else {
+                updateDisplay(`Selected: ${item.name}. Price: NT$ ${item.price.toFixed(0)}`);
+            }
+        });
+    });
+
+    // 3. Handle inserting money via BUTTONS (Updates the running balance AND machine inventory)
+    moneyButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const amount = parseFloat(button.dataset.value);
+
+            // Per original logic, Vending Machine Bill Restriction
+            if (amount > 100) {
+                updateDisplay(`Machine only accepts up to NT$ 100. Please exchange first.`);
+                return;
+            }
+
+            // Add standard denominations to the machine's inventory for change-making
+            coinInventory[amount] = (coinInventory[amount] || 0) + 1;
+            
+            currentBalance += amount;
+            updateDisplay(`Inserted NT$ ${amount.toFixed(0)}. Ready to purchase!`);
+            
+            // Log inventory update for debugging/tracking
+            console.log("Current Coin Inventory:", coinInventory);
+        });
+    });
+
+
+    // 4. Handle purchase button click
+    purchaseButton.addEventListener('click', () => {
+        const code = selectedCode; // Use the selected code from the buttons/products
+        
+        if (!code || !products[code]) {
+            updateDisplay("Error: Please select an item first.");
+            resetSelection();
+            return;
+        }
+
+        const item = products[code];
+
+        if (item.stock === 0) {
+            updateDisplay(`${item.name} (${code}) is SOLD OUT!`);
+            return;
+        }
+
+        if (currentBalance < item.price) {
+            const needed = item.price - currentBalance;
+            updateDisplay(`Need NT$ ${needed.toFixed(0)} more for ${item.name}.`);
+            return;
+        }
+        
+        const changeAmount = currentBalance - item.price;
+        
+        // Check if the machine has enough change *before* committing the sale
+        if (changeAmount > 0 && !canMakeChange(changeAmount)) {
+             updateDisplay(`ERROR: Machine cannot make change of NT$ ${changeAmount.toFixed(0)}. Please use exact amount or return change.`);
+             return;
+        }
+
+
+        // --- Successful Transaction ---
+        
+        // DEDUCT PRICE, KEEP REMAINING BALANCE
+        currentBalance -= item.price;  
+        products[code].stock--;  
+
+        // 1. Show "Dispensing" message immediately
+        updateDisplay(`Dispensing ${item.name}... Your remaining balance is NT$ ${currentBalance.toFixed(0)}.`);
+        outputArea.innerHTML = `<p>Dispensing Item...</p>`;
+
+        // 2. Drop the item into the chute after a short delay
+        setTimeout(() => {
+            outputArea.innerHTML = `
+                <p>Enjoy your ${item.name}!</p>
+                <span class="item-icon">${item.icon}</span>
+            `;
+            
+            // If there's remaining balance, return it immediately as change
+            if (currentBalance > 0) {
+                // The item dispense is complete, so we call returnChange to handle the remaining balance
+                returnChange();  
+            } else {
+                 updateDisplay("Thank you! Select an item or insert money.");
+            }
+        }, 1000);  
+
+        resetSelection();
+        console.log(`${item.name} stock remaining: ${products[code].stock}`);
+        console.log("Current Coin Inventory:", coinInventory);
+    });
+
+    // 5. Handle "Return Change" button click
+    changeButton.addEventListener('click', returnChange);
+
+    // Initial message on load
+    updateDisplay("Welcome! Select an item or insert money.");
+
+</script>
+
+</body>
+</html>
